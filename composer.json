@@ -1,0 +1,17 @@
+{
+    "name": "kevinmoscoso/erpia",
+    "description": "ERP experimental generado con IA para proyecto de tesis",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Erpia\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "KevinMoscoso",
+            "email": "kevin.moscoso.18@est.ucacue.edu.ec"
+        }
+    ],
+    "require": {}
+}
