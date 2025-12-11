@@ -1,61 +1,65 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Erpia\Model;
+
+use Erpia\Core\Database;
+use PDO;
 
 class Producto
 {
-    public int $id = 0;
-    public string $nombre = '';
-    public string $descripcion = '';
-    public float $precio = 0.0;
-    public int $stock = 0;
-    public string $created_at = '';
-
-    public function __construct(array $data = [])
+    public static function getAll(): array
     {
-        if (!empty($data)) {
-            $this->loadFromArray($data);
-        }
+        $db = Database::getConnection();
+        $stmt = $db->query("SELECT * FROM productos ORDER BY id DESC");
+        return $stmt->fetchAll();
     }
 
-    public function loadFromArray(array $data): void
+    public static function findById(int $id): ?array
     {
-        if (isset($data['id'])) {
-            $this->id = (int) $data['id'];
-        }
-
-        if (isset($data['nombre'])) {
-            $this->nombre = (string) $data['nombre'];
-        }
-
-        if (isset($data['descripcion'])) {
-            $this->descripcion = (string) $data['descripcion'];
-        }
-
-        if (isset($data['precio'])) {
-            $this->precio = (float) $data['precio'];
-        }
-
-        if (isset($data['stock'])) {
-            $this->stock = (int) $data['stock'];
-        }
-
-        if (isset($data['created_at'])) {
-            $this->created_at = (string) $data['created_at'];
-        }
+        $db = Database::getConnection();
+        $stmt = $db->prepare("SELECT * FROM productos WHERE id = ?");
+        $stmt->execute([$id]);
+        $result = $stmt->fetch();
+        return $result ?: null;
     }
 
-    public function toArray(): array
+    public static function create(array $data): bool
     {
-        return [
-            'id' => $this->id,
-            'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion,
-            'precio' => $this->precio,
-            'stock' => $this->stock,
-            'created_at' => $this->created_at,
-        ];
+        $db = Database::getConnection();
+        $sql = "INSERT INTO productos (nombre, descripcion, precio, stock, created_at)
+                VALUES (:nombre, :descripcion, :precio, :stock, NOW())";
+
+        $stmt = $db->prepare($sql);
+
+        return $stmt->execute([
+            ':nombre' => $data['nombre'],
+            ':descripcion' => $data['descripcion'],
+            ':precio' => $data['precio'],
+            ':stock' => $data['stock'],
+        ]);
+    }
+
+    public static function update(int $id, array $data): bool
+    {
+        $db = Database::getConnection();
+        $sql = "UPDATE productos SET nombre = :nombre, descripcion = :descripcion,
+                precio = :precio, stock = :stock WHERE id = :id";
+
+        $stmt = $db->prepare($sql);
+
+        return $stmt->execute([
+            ':nombre' => $data['nombre'],
+            ':descripcion' => $data['descripcion'],
+            ':precio' => $data['precio'],
+            ':stock' => $data['stock'],
+            ':id' => $id,
+        ]);
+    }
+
+    public static function delete(int $id): bool
+    {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("DELETE FROM productos WHERE id = ?");
+        return $stmt->execute([$id]);
     }
 }

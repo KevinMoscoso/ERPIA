@@ -1,8 +1,11 @@
 <?php
 
-declare(strict_types=1);
-
 return [
-    'app_name' => 'ERP-IA',
-    'environment' => 'dev',
+    'db' => [
+        'host' => 'localhost',
+        'dbname' => 'erpia',
+        'user' => 'root',        // Si usas otra cuenta, cámbiala
+        'password' => 'Admin123..',        // Si tu MySQL tiene contraseña, ponla aquí
+        'charset' => 'utf8mb4'
+    ]
 ];
