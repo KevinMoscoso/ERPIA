@@ -2,21 +2,20 @@
 
 namespace Erpia\Model;
 
-use Erpia\Core\Database;
-use PDO;
+use Erpia\Core\Model;
 
-class Producto
+class Producto extends Model
 {
     public static function getAll(): array
     {
-        $db = Database::getConnection();
+        $db = self::db();
         $stmt = $db->query("SELECT * FROM productos ORDER BY id DESC");
         return $stmt->fetchAll();
     }
 
     public static function findById(int $id): ?array
     {
-        $db = Database::getConnection();
+        $db = self::db();
         $stmt = $db->prepare("SELECT * FROM productos WHERE id = ?");
         $stmt->execute([$id]);
         $result = $stmt->fetch();
@@ -25,40 +24,41 @@ class Producto
 
     public static function create(array $data): bool
     {
-        $db = Database::getConnection();
-        $sql = "INSERT INTO productos (nombre, descripcion, precio, stock, created_at)
-                VALUES (:nombre, :descripcion, :precio, :stock, NOW())";
-
-        $stmt = $db->prepare($sql);
+        $db = self::db();
+        $stmt = $db->prepare(
+            "INSERT INTO productos (nombre, descripcion, precio, stock, created_at)
+             VALUES (?, ?, ?, ?, NOW())"
+        );
 
         return $stmt->execute([
-            ':nombre' => $data['nombre'],
-            ':descripcion' => $data['descripcion'],
-            ':precio' => $data['precio'],
-            ':stock' => $data['stock'],
+            $data['nombre'],
+            $data['descripcion'],
+            $data['precio'],
+            $data['stock'],
         ]);
     }
 
     public static function update(int $id, array $data): bool
     {
-        $db = Database::getConnection();
-        $sql = "UPDATE productos SET nombre = :nombre, descripcion = :descripcion,
-                precio = :precio, stock = :stock WHERE id = :id";
-
-        $stmt = $db->prepare($sql);
+        $db = self::db();
+        $stmt = $db->prepare(
+            "UPDATE productos
+             SET nombre = ?, descripcion = ?, precio = ?, stock = ?
+             WHERE id = ?"
+        );
 
         return $stmt->execute([
-            ':nombre' => $data['nombre'],
-            ':descripcion' => $data['descripcion'],
-            ':precio' => $data['precio'],
-            ':stock' => $data['stock'],
-            ':id' => $id,
+            $data['nombre'],
+            $data['descripcion'],
+            $data['precio'],
+            $data['stock'],
+            $id,
         ]);
     }
 
     public static function delete(int $id): bool
     {
-        $db = Database::getConnection();
+        $db = self::db();
         $stmt = $db->prepare("DELETE FROM productos WHERE id = ?");
         return $stmt->execute([$id]);
     }
