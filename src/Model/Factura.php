@@ -40,14 +40,13 @@ class Factura extends Model
             ? $data['estado']
             : 'BORRADOR';
 
-        $sql = "INSERT INTO facturas (numero, fecha, cliente_id, total, estado, created_at)
-                VALUES (:numero, :fecha, :cliente_id, :total, :estado, NOW())";
+        $sql = "INSERT INTO facturas (numero, fecha, cliente_id, estado, created_at)
+                VALUES (:numero, :fecha, :cliente_id, :estado, NOW())";
 
         $stmt = self::db()->prepare($sql);
         $stmt->bindValue(':numero', $data['numero'], PDO::PARAM_STR);
         $stmt->bindValue(':fecha', $data['fecha'], PDO::PARAM_STR);
         $stmt->bindValue(':cliente_id', (int) $data['cliente_id'], PDO::PARAM_INT);
-        $stmt->bindValue(':total', (float) $data['total'], PDO::PARAM_STR);
         $stmt->bindValue(':estado', $estado, PDO::PARAM_STR);
 
         return $stmt->execute();
@@ -63,7 +62,6 @@ class Factura extends Model
                 SET numero = :numero,
                     fecha = :fecha,
                     cliente_id = :cliente_id,
-                    total = :total,
                     estado = :estado
                 WHERE id = :id";
 
@@ -72,7 +70,6 @@ class Factura extends Model
         $stmt->bindValue(':numero', $data['numero'], PDO::PARAM_STR);
         $stmt->bindValue(':fecha', $data['fecha'], PDO::PARAM_STR);
         $stmt->bindValue(':cliente_id', (int) $data['cliente_id'], PDO::PARAM_INT);
-        $stmt->bindValue(':total', (float) $data['total'], PDO::PARAM_STR);
         $stmt->bindValue(':estado', $estado, PDO::PARAM_STR);
 
         return $stmt->execute();

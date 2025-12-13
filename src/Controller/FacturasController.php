@@ -72,7 +72,7 @@ class FacturasController extends Controller
             'numero' => trim($_POST['numero'] ?? ''),
             'fecha' => $_POST['fecha'] ?? '',
             'cliente_id' => (int) ($_POST['cliente_id'] ?? 0),
-            'total' => (float) ($_POST['total'] ?? 0),
+            //total eliminado del formulario
             'estado' => $_POST['estado'] ?? 'BORRADOR',
         ];
 

@@ -29,11 +29,6 @@ $old = $old ?? [];
         </div>
 
         <div class="mb-3">
-            <label>Total</label>
-            <input type="number" step="0.01" name="total" class="form-control" value="<?= htmlspecialchars($old['total'] ?? '0.00') ?>">
-        </div>
-
-        <div class="mb-3">
             <label>Estado</label>
             <select name="estado" class="form-select">
                 <?php foreach (['BORRADOR', 'EMITIDA', 'ANULADA'] as $e): ?>
