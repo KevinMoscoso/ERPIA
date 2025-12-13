@@ -30,7 +30,7 @@
         </div>
 
         <div class="d-flex justify-content-between">
-            <a href="/pagos/<?= $factura['id'] ?>" class="btn btn-secondary">Volver</a>
+            <a href="/pagos/index/<?= $factura['id'] ?>" class="btn btn-secondary">Volver</a>
             <button class="btn btn-primary">Guardar pago</button>
         </div>
     </form>

@@ -85,7 +85,7 @@ class PagosController extends Controller
             $stmt->execute();
         }
 
-        header('Location: /pagos/' . $facturaId);
+        header('Location: /pagos/index/' . $facturaId);
         exit;
     }
 
@@ -101,7 +101,7 @@ class PagosController extends Controller
 
         Pago::delete($id);
 
-        header('Location: /pagos/' . $facturaId);
+        header('Location: /pagos/index/' . $facturaId);
         exit;
     }
 }
