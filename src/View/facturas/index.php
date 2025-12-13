@@ -38,6 +38,7 @@
                     <a href="/facturas/editar/<?= $f['id'] ?>" class="btn btn-sm btn-warning">Editar</a>
                     <a href="/facturas/eliminar/<?= $f['id'] ?>" class="btn btn-sm btn-danger"
                        onclick="return confirm('¿Eliminar factura?')">Eliminar</a>
+                       <a href="/facturas/detalle/<?= $f['id'] ?>" class="btn btn-sm btn-info me-1">Detalle</a>
                 </td>
             </tr>
         <?php endforeach; ?>
