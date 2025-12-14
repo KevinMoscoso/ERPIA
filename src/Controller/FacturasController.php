@@ -127,6 +127,7 @@ class FacturasController extends Controller
         }
 
         FacturaDetalle::create($data);
+        Factura::recalcularTotal($facturaId);
 
         header("Location: /facturas/detalle/$facturaId");
         exit;
@@ -140,7 +141,7 @@ class FacturasController extends Controller
             'cantidad' => (int) $_POST['cantidad'],
             'precio_unitario' => (float) $_POST['precio_unitario'],
         ]);
-
+        Factura::recalcularTotal($facturaId);
         header("Location: /facturas/detalle/$facturaId");
         exit;
     }
@@ -151,6 +152,7 @@ class FacturasController extends Controller
 
         if ($detalle) {
             FacturaDetalle::delete($detalleId);
+            Factura::recalcularTotal((int) $detalle['factura_id']);
             header("Location: /facturas/detalle/" . $detalle['factura_id']);
             exit;
         }

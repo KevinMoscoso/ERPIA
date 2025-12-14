@@ -67,7 +67,7 @@ class FacturaDetalle
 
     public static function create(array $data): bool
     {
-        $subtotal = (int) $data['cantidad'] * (float) $data['precio_unitario'];
+        $subtotal = (float) $data['cantidad'] * (float) $data['precio_unitario'];
 
         $sql = "INSERT INTO factura_detalles
                 (factura_id, producto_id, cantidad, precio_unitario, subtotal, created_at)
@@ -78,8 +78,8 @@ class FacturaDetalle
         $stmt->bindValue(':factura_id', (int) $data['factura_id'], PDO::PARAM_INT);
         $stmt->bindValue(':producto_id', (int) $data['producto_id'], PDO::PARAM_INT);
         $stmt->bindValue(':cantidad', (int) $data['cantidad'], PDO::PARAM_INT);
-        $stmt->bindValue(':precio_unitario', (float) $data['precio_unitario']);
-        $stmt->bindValue(':subtotal', $subtotal);
+        $stmt->bindValue(':precio_unitario', (float) $data['precio_unitario'], PDO::PARAM_STR);
+        $stmt->bindValue(':subtotal', $subtotal, PDO::PARAM_STR);
 
         return $stmt->execute();
     }

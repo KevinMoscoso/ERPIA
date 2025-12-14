@@ -83,4 +83,22 @@ class Factura extends Model
 
         return $stmt->execute();
     }
+
+    public static function recalcularTotal(int $facturaId): void
+    {
+        $sql = "
+            UPDATE facturas
+            SET total = (
+                SELECT IFNULL(SUM(subtotal), 0)
+                FROM factura_detalles
+                WHERE factura_id = :factura_id_sub
+            )
+            WHERE id = :factura_id_main
+        ";
+
+        $stmt = self::db()->prepare($sql);
+        $stmt->bindValue(':factura_id_sub', $facturaId, PDO::PARAM_INT);
+        $stmt->bindValue(':factura_id_main', $facturaId, PDO::PARAM_INT);
+        $stmt->execute();
+    }
 }
