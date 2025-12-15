@@ -6,20 +6,25 @@ namespace Erpia\Controller;
 
 use Erpia\Core\Controller;
 use Erpia\Core\View;
+use Erpia\Core\Database;
 use Erpia\Model\Factura;
 use Erpia\Model\FacturaDetalle;
+use Erpia\Model\InventarioMovimiento;
 
 class FacturasController extends Controller
 {
+    /* =========================
+     * LISTADO
+     * ========================= */
     public function index(): void
     {
         $facturas = Factura::getAll();
-
-        View::render('facturas/index', [
-            'facturas' => $facturas,
-        ]);
+        View::render('facturas/index', ['facturas' => $facturas]);
     }
 
+    /* =========================
+     * CREAR FACTURA
+     * ========================= */
     public function crear(): void
     {
         View::render('facturas/crear', [
@@ -31,11 +36,10 @@ class FacturasController extends Controller
     public function guardar(): void
     {
         $data = [
-            'numero' => trim($_POST['numero'] ?? ''),
-            'fecha' => $_POST['fecha'] ?? '',
+            'numero'     => trim($_POST['numero'] ?? ''),
+            'fecha'      => $_POST['fecha'] ?? '',
             'cliente_id' => (int) ($_POST['cliente_id'] ?? 0),
-            'total' => (float) ($_POST['total'] ?? 0),
-            'estado' => $_POST['estado'] ?? 'BORRADOR',
+            'estado'     => $_POST['estado'] ?? 'BORRADOR',
         ];
 
         if ($data['numero'] === '' || $data['fecha'] === '' || $data['cliente_id'] <= 0) {
@@ -52,12 +56,15 @@ class FacturasController extends Controller
         exit;
     }
 
-    public function editar($id): void
+    /* =========================
+     * EDITAR FACTURA
+     * ========================= */
+    public function editar(int $id): void
     {
-        $factura = Factura::findById((int) $id);
+        $factura = Factura::findById($id);
 
-        if ($factura === null) {
-            throw new \RuntimeException('Factura no encontrada.');
+        if (!$factura) {
+            throw new \RuntimeException('Factura no encontrada');
         }
 
         View::render('facturas/editar', [
@@ -66,53 +73,54 @@ class FacturasController extends Controller
         ]);
     }
 
-    public function actualizar($id): void
+    public function actualizar(int $id): void
     {
         $data = [
-            'numero' => trim($_POST['numero'] ?? ''),
-            'fecha' => $_POST['fecha'] ?? '',
+            'numero'     => trim($_POST['numero'] ?? ''),
+            'fecha'      => $_POST['fecha'] ?? '',
             'cliente_id' => (int) ($_POST['cliente_id'] ?? 0),
-            //total eliminado del formulario
-            'estado' => $_POST['estado'] ?? 'BORRADOR',
+            'estado'     => $_POST['estado'] ?? 'BORRADOR',
         ];
 
-        if ($data['numero'] === '' || $data['fecha'] === '' || $data['cliente_id'] <= 0) {
-            $factura = Factura::findById((int) $id);
-            $factura = array_merge($factura ?? [], $data);
-
-            View::render('facturas/editar', [
-                'factura' => $factura,
-                'errors' => ['form' => 'Datos inválidos'],
-            ]);
-            return;
-        }
-
-        Factura::update((int) $id, $data);
+        Factura::update($id, $data);
 
         header('Location: /facturas');
         exit;
     }
 
-    public function eliminar($id): void
+    /* =========================
+     * ELIMINAR FACTURA
+     * ========================= */
+    public function eliminar(int $id): void
     {
-        Factura::delete((int) $id);
+        Factura::delete($id);
 
         header('Location: /facturas');
         exit;
     }
 
-    public function detalle(int $facturaId)
+    /* =========================
+     * DETALLE DE FACTURA
+     * ========================= */
+    public function detalle(int $facturaId): void
     {
-        $factura = Factura::findById($facturaId);
+        $factura  = Factura::findById($facturaId);
         $detalles = FacturaDetalle::getByFactura($facturaId);
 
+        if (!$factura) {
+            throw new \RuntimeException('Factura no encontrada');
+        }
+
         View::render('facturas/detalle', [
-            'factura' => $factura,
-            'detalles' => $detalles
+            'factura'  => $factura,
+            'detalles' => $detalles,
         ]);
     }
 
-    public function detalleGuardar(int $facturaId): void
+    /* =========================
+     * AGREGAR PRODUCTO A FACTURA
+     * ========================= */
+    public function agregarDetalle(int $facturaId): void
     {
         $data = [
             'factura_id'      => $facturaId,
@@ -126,37 +134,72 @@ class FacturasController extends Controller
             exit;
         }
 
-        FacturaDetalle::create($data);
-        Factura::recalcularTotal($facturaId);
+        $db = Database::getConnection();
+
+        try {
+            $db->beginTransaction();
+
+            // 1️⃣ Crear detalle
+            FacturaDetalle::create($data);
+
+            // 2️⃣ Registrar salida de inventario
+            InventarioMovimiento::registrarSalidaFactura(
+                $data['producto_id'],
+                $data['cantidad'],
+                $facturaId,
+                'Salida por factura ' . $facturaId
+            );
+
+            // 3️⃣ Recalcular total
+            Factura::recalcularTotal($facturaId);
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
 
         header("Location: /facturas/detalle/$facturaId");
         exit;
     }
 
-    public function agregarDetalle(int $facturaId): void
-    {
-        FacturaDetalle::create([
-            'factura_id' => $facturaId,
-            'producto_id' => (int) $_POST['producto_id'],
-            'cantidad' => (int) $_POST['cantidad'],
-            'precio_unitario' => (float) $_POST['precio_unitario'],
-        ]);
-        Factura::recalcularTotal($facturaId);
-        header("Location: /facturas/detalle/$facturaId");
-        exit;
-    }
-
+    /* =========================
+     * ELIMINAR DETALLE
+     * ========================= */
     public function eliminarDetalle(int $detalleId): void
     {
         $detalle = FacturaDetalle::findById($detalleId);
 
-        if ($detalle) {
-            FacturaDetalle::delete($detalleId);
-            Factura::recalcularTotal((int) $detalle['factura_id']);
-            header("Location: /facturas/detalle/" . $detalle['factura_id']);
-            exit;
+        if (!$detalle) {
+            throw new \RuntimeException('Detalle no encontrado');
         }
 
-        throw new \RuntimeException('Detalle no encontrado');
+        $db = Database::getConnection();
+
+        try {
+            $db->beginTransaction();
+
+            // 1️⃣ Eliminar detalle
+            FacturaDetalle::delete($detalleId);
+
+            // 2️⃣ Registrar entrada de inventario
+            InventarioMovimiento::registrarEntradaFactura(
+                (int) $detalle['producto_id'],
+                (int) $detalle['cantidad'],
+                (int) $detalle['factura_id'],
+                'Reverso por eliminación detalle factura ' . $detalle['factura_id']
+            );
+
+            // 3️⃣ Recalcular total
+            Factura::recalcularTotal((int) $detalle['factura_id']);
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
+
+        header("Location: /facturas/detalle/" . $detalle['factura_id']);
+        exit;
     }
 }
