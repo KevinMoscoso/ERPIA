@@ -7,17 +7,38 @@ namespace Erpia\Controller;
 use Erpia\Core\View;
 use Erpia\Core\Database;
 use Erpia\Model\InventarioMovimiento;
+use PDO;
 
 class InventarioController
 {
     public function index(): void
     {
-        $stmt = Database::getConnection()->query(
-            "SELECT * FROM inventario_movimientos ORDER BY id DESC LIMIT 50"
-        );
+        $sql = "
+            SELECT 
+                im.id,
+                im.producto_id,
+                p.nombre AS producto_nombre,
+                im.tipo,
+                im.cantidad,
+                im.referencia_tipo,
+                im.referencia_id,
+                im.observacion,
+                im.created_at,
+                f.numero AS factura_numero
+            FROM inventario_movimientos im
+            LEFT JOIN productos p ON p.id = im.producto_id
+            LEFT JOIN facturas f 
+                ON im.referencia_tipo = 'FACTURA'
+               AND im.referencia_id = f.id
+            ORDER BY im.created_at DESC
+            LIMIT 50
+        ";
+
+        $stmt = Database::getConnection()->prepare($sql);
+        $stmt->execute();
 
         View::render('inventario/index', [
-            'movimientos' => $stmt->fetchAll(),
+            'movimientos' => $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [],
         ]);
     }
 
@@ -39,7 +60,7 @@ class InventarioController
     public function guardarAjuste(int $id): void
     {
         $cantidad = (int) ($_POST['cantidad'] ?? 0);
-        $obs = trim((string)($_POST['observacion'] ?? ''));
+        $obs = trim((string) ($_POST['observacion'] ?? ''));
 
         if ($cantidad === 0) {
             header('Location: /inventario/ajustar/' . $id);
@@ -54,17 +75,15 @@ class InventarioController
         $db->beginTransaction();
 
         try {
-            // ✅ Guardar el delta real (puede ser negativo)
             InventarioMovimiento::registrarMovimiento([
-                'producto_id' => $id,
-                'tipo' => 'AJUSTE',
-                'cantidad' => $cantidad,          // ✅ NO abs()
+                'producto_id'     => $id,
+                'tipo'            => 'AJUSTE',
+                'cantidad'        => $cantidad, // delta real
                 'referencia_tipo' => 'AJUSTE',
-                'referencia_id' => null,
-                'observacion' => $obs,
+                'referencia_id'   => null,
+                'observacion'     => $obs,
             ]);
 
-            // ✅ Aplicar delta
             InventarioMovimiento::ajustarStock($id, $cantidad);
 
             $db->commit();
