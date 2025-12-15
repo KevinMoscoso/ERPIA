@@ -22,12 +22,26 @@ class InventarioMovimiento
                 (:producto_id, :tipo, :cantidad, :referencia_tipo, :referencia_id, :observacion, NOW())";
 
         $stmt = self::db()->prepare($sql);
-        $stmt->bindValue(':producto_id', $data['producto_id'], PDO::PARAM_INT);
-        $stmt->bindValue(':tipo', $data['tipo'], PDO::PARAM_STR);
-        $stmt->bindValue(':cantidad', $data['cantidad'], PDO::PARAM_INT);
-        $stmt->bindValue(':referencia_tipo', $data['referencia_tipo'], PDO::PARAM_STR);
-        $stmt->bindValue(':referencia_id', $data['referencia_id'], PDO::PARAM_INT);
-        $stmt->bindValue(':observacion', $data['observacion'], PDO::PARAM_STR);
+
+        $stmt->bindValue(':producto_id', (int)$data['producto_id'], PDO::PARAM_INT);
+        $stmt->bindValue(':tipo', (string)$data['tipo'], PDO::PARAM_STR);
+        $stmt->bindValue(':cantidad', (int)$data['cantidad'], PDO::PARAM_INT);
+        $stmt->bindValue(':referencia_tipo', (string)$data['referencia_tipo'], PDO::PARAM_STR);
+
+        // ✅ referencia_id puede ser NULL
+        if ($data['referencia_id'] === null) {
+            $stmt->bindValue(':referencia_id', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':referencia_id', (int)$data['referencia_id'], PDO::PARAM_INT);
+        }
+
+        // ✅ observacion puede ser NULL
+        $obs = $data['observacion'] ?? null;
+        if ($obs === null || $obs === '') {
+            $stmt->bindValue(':observacion', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':observacion', (string)$obs, PDO::PARAM_STR);
+        }
 
         return $stmt->execute();
     }

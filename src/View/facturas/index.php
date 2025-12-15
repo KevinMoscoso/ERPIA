@@ -10,12 +10,13 @@
 </head>
 <body>
 <div class="container my-4">
+
     <div class="d-flex justify-content-between mb-3">
         <h1 class="h4">Facturas</h1>
         <a href="/facturas/crear" class="btn btn-primary">Crear factura</a>
     </div>
 
-    <table class="table table-bordered table-striped">
+    <table class="table table-bordered table-striped align-middle">
         <thead>
         <tr>
             <th>Número</th>
@@ -35,15 +36,35 @@
                 <td><?= number_format((float) $f['total'], 2) ?></td>
                 <td><?= htmlspecialchars($f['estado']) ?></td>
                 <td class="text-center">
-                    <a href="/facturas/editar/<?= $f['id'] ?>" class="btn btn-sm btn-warning">Editar</a>
-                    <a href="/facturas/eliminar/<?= $f['id'] ?>" class="btn btn-sm btn-danger"
-                       onclick="return confirm('¿Eliminar factura?')">Eliminar</a>
-                       <a href="/facturas/detalle/<?= $f['id'] ?>" class="btn btn-sm btn-info me-1">Detalle</a>
+
+                    <a href="/facturas/editar/<?= $f['id'] ?>"
+                       class="btn btn-sm btn-warning me-1">
+                        Editar
+                    </a>
+
+                    <a href="/facturas/eliminar/<?= $f['id'] ?>"
+                       class="btn btn-sm btn-danger me-1"
+                       onclick="return confirm('¿Eliminar factura?')">
+                        Eliminar
+                    </a>
+
+                    <a href="/facturas/detalle/<?= $f['id'] ?>"
+                       class="btn btn-sm btn-info me-1">
+                        Detalle
+                    </a>
+
+                    <!-- ✅ BOTÓN PAGOS (NUEVO) -->
+                    <a href="/pagos/index/<?= $f['id'] ?>"
+                       class="btn btn-sm btn-secondary">
+                        Pagos
+                    </a>
+
                 </td>
             </tr>
         <?php endforeach; ?>
         </tbody>
     </table>
+
 </div>
 </body>
 </html>

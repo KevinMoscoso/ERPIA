@@ -104,4 +104,9 @@ class PagosController extends Controller
         header('Location: /pagos/index/' . $facturaId);
         exit;
     }
+
+    public function factura(int $facturaId): void
+    {
+        $this->index($facturaId);
+    }
 }

@@ -38,19 +38,40 @@ class InventarioController
 
     public function guardarAjuste(int $id): void
     {
-        $cantidad = (int) $_POST['cantidad'];
-        $obs = $_POST['observacion'] ?? 'Ajuste manual';
+        $cantidad = (int) ($_POST['cantidad'] ?? 0);
+        $obs = trim((string)($_POST['observacion'] ?? ''));
 
-        InventarioMovimiento::registrarMovimiento([
-            'producto_id' => $id,
-            'tipo' => 'AJUSTE',
-            'cantidad' => abs($cantidad),
-            'referencia_tipo' => 'AJUSTE',
-            'referencia_id' => null,
-            'observacion' => $obs,
-        ]);
+        if ($cantidad === 0) {
+            header('Location: /inventario/ajustar/' . $id);
+            exit;
+        }
 
-        InventarioMovimiento::ajustarStock($id, $cantidad);
+        if ($obs === '') {
+            $obs = 'Ajuste manual';
+        }
+
+        $db = Database::getConnection();
+        $db->beginTransaction();
+
+        try {
+            // ✅ Guardar el delta real (puede ser negativo)
+            InventarioMovimiento::registrarMovimiento([
+                'producto_id' => $id,
+                'tipo' => 'AJUSTE',
+                'cantidad' => $cantidad,          // ✅ NO abs()
+                'referencia_tipo' => 'AJUSTE',
+                'referencia_id' => null,
+                'observacion' => $obs,
+            ]);
+
+            // ✅ Aplicar delta
+            InventarioMovimiento::ajustarStock($id, $cantidad);
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
 
         header('Location: /inventario/producto/' . $id);
         exit;
