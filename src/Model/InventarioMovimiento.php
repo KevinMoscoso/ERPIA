@@ -55,7 +55,7 @@ class InventarioMovimiento
         $stmt->execute();
     }
 
-    public static function registrarSalidaFactura(int $productoId, int $cantidad, int $facturaId, string $obs = null): void
+    public static function registrarSalidaFactura(int $productoId, int $cantidad, int $facturaId, ?string $obs = null): void
     {
         self::registrarMovimiento([
             'producto_id' => $productoId,
@@ -69,7 +69,7 @@ class InventarioMovimiento
         self::ajustarStock($productoId, -$cantidad);
     }
 
-    public static function registrarEntradaFactura(int $productoId, int $cantidad, int $facturaId, string $obs = null): void
+    public static function registrarEntradaFactura(int $productoId, int $cantidad, int $facturaId, ?string $obs = null): void
     {
         self::registrarMovimiento([
             'producto_id' => $productoId,
