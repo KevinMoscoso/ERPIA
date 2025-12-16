@@ -18,8 +18,33 @@ class FacturasController extends Controller
      * ========================= */
     public function index(): void
     {
-        $facturas = Factura::getAll();
-        View::render('facturas/index', ['facturas' => $facturas]);
+        $q = trim($_GET['q'] ?? '');
+
+        if ($q !== '') {
+            // 🔍 Búsqueda por número de factura
+            $sql = "
+                SELECT f.*, c.nombre AS cliente_nombre
+                FROM facturas f
+                LEFT JOIN clientes c ON c.id = f.cliente_id
+                WHERE f.numero LIKE :numero
+                ORDER BY f.fecha DESC
+                LIMIT 50
+            ";
+
+            $stmt = Database::getConnection()->prepare($sql);
+            $stmt->bindValue(':numero', '%' . $q . '%');
+            $stmt->execute();
+
+            $facturas = $stmt->fetchAll();
+        } else {
+            // 📄 Listado normal
+            $facturas = Factura::getAll();
+        }
+
+        View::render('facturas/index', [
+            'facturas' => $facturas,
+            'q'        => $q,
+        ]);
     }
 
     /* =========================
