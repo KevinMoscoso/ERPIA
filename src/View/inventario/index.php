@@ -1,5 +1,7 @@
 <?php
 /** @var array $movimientos */
+/** @var string $fecha */
+$fecha = $fecha ?? '';
 ?>
 <!doctype html>
 <html lang="es">
@@ -15,11 +17,30 @@
 </head>
 <body>
 <div class="container my-4">
+
+    <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h4 mb-0">Inventario</h1>
         <a href="/inventario" class="btn btn-outline-secondary btn-sm">Actualizar</a>
     </div>
 
+    <!-- 🔍 BUSCADOR POR FECHA -->
+    <form method="get" action="/inventario" class="row g-2 mb-3">
+        <div class="col-auto">
+            <input
+                type="date"
+                name="fecha"
+                class="form-control"
+                value="<?= htmlspecialchars($fecha, ENT_QUOTES, 'UTF-8') ?>"
+            >
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary">Buscar</button>
+            <a href="/inventario" class="btn btn-outline-secondary">Limpiar</a>
+        </div>
+    </form>
+
+    <!-- Tabla -->
     <div class="card">
         <div class="card-header">
             Últimos movimientos (50)
@@ -53,7 +74,6 @@
                                 $badgeClass = 'bg-warning text-dark';
                             }
 
-                            // Referencia legible
                             if ($m['referencia_tipo'] === 'FACTURA' && !empty($m['factura_numero'])) {
                                 $refText = 'FACTURA Nº ' . $m['factura_numero'];
                             } else {

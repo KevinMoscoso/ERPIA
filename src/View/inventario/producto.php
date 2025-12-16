@@ -7,9 +7,20 @@
 </head>
 <body>
 <div class="container my-4">
-    <h1 class="h4 mb-3">Movimientos del producto <?= $productoId ?></h1>
 
-    <a href="/inventario/ajustar/<?= $productoId ?>" class="btn btn-primary mb-3">Ajustar stock</a>
+    <!-- 🔙 Volver a inventario -->
+    <div class="mb-3">
+        <a href="/inventario" class="btn btn-outline-secondary btn-sm">
+            ← Volver a inventario
+        </a>
+    </div>
+
+    <h1 class="h4 mb-3">Movimientos del producto <?= htmlspecialchars((string)$productoId) ?></h1>
+
+    <a href="/inventario/ajustar/<?= htmlspecialchars((string)$productoId) ?>"
+       class="btn btn-primary mb-3">
+        Ajustar stock
+    </a>
 
     <table class="table table-bordered">
         <thead>
@@ -21,16 +32,23 @@
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($movimientos as $m): ?>
+        <?php if (!empty($movimientos)): ?>
+            <?php foreach ($movimientos as $m): ?>
+                <tr>
+                    <td><?= htmlspecialchars((string)$m['tipo']) ?></td>
+                    <td><?= htmlspecialchars((string)$m['cantidad']) ?></td>
+                    <td><?= htmlspecialchars((string)($m['observacion'] ?? '')) ?></td>
+                    <td><?= htmlspecialchars((string)$m['created_at']) ?></td>
+                </tr>
+            <?php endforeach; ?>
+        <?php else: ?>
             <tr>
-                <td><?= $m['tipo'] ?></td>
-                <td><?= $m['cantidad'] ?></td>
-                <td><?= $m['observacion'] ?></td>
-                <td><?= $m['created_at'] ?></td>
+                <td colspan="4" class="text-center">No hay movimientos para este producto.</td>
             </tr>
-        <?php endforeach; ?>
+        <?php endif; ?>
         </tbody>
     </table>
+
 </div>
 </body>
 </html>

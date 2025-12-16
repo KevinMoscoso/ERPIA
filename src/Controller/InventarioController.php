@@ -13,6 +13,8 @@ class InventarioController
 {
     public function index(): void
     {
+        $fecha = trim($_GET['fecha'] ?? '');
+
         $sql = "
             SELECT 
                 im.id,
@@ -30,15 +32,24 @@ class InventarioController
             LEFT JOIN facturas f 
                 ON im.referencia_tipo = 'FACTURA'
                AND im.referencia_id = f.id
-            ORDER BY im.created_at DESC
-            LIMIT 50
+            WHERE 1=1
         ";
 
+        $params = [];
+
+        if ($fecha !== '') {
+            $sql .= " AND DATE(im.created_at) = :fecha ";
+            $params['fecha'] = $fecha;
+        }
+
+        $sql .= " ORDER BY im.created_at DESC LIMIT 50";
+
         $stmt = Database::getConnection()->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
 
         View::render('inventario/index', [
             'movimientos' => $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [],
+            'fecha' => $fecha,
         ]);
     }
 
