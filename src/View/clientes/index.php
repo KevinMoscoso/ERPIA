@@ -1,5 +1,6 @@
 <?php
 /** @var array $clientes */
+/** @var string $q */
 ?>
 <!doctype html>
 <html lang="es">
@@ -15,10 +16,30 @@
 </head>
 <body>
 <div class="container my-4">
+
+    <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0">Listado de clientes</h1>
         <a href="/clientes/crear" class="btn btn-primary">Crear cliente</a>
     </div>
+
+    <!-- 🔍 BUSCADOR POR NOMBRE -->
+    <form method="get" action="/clientes" class="mb-3">
+        <div class="input-group">
+            <input
+                type="text"
+                name="q"
+                class="form-control"
+                placeholder="Buscar cliente por nombre"
+                value="<?= htmlspecialchars($q ?? '', ENT_QUOTES, 'UTF-8') ?>"
+            >
+            <button class="btn btn-primary">Buscar</button>
+
+            <?php if (!empty($q)): ?>
+                <a href="/clientes" class="btn btn-outline-secondary">Limpiar</a>
+            <?php endif; ?>
+        </div>
+    </form>
 
     <?php if (!empty($clientes)): ?>
         <div class="table-responsive">
@@ -40,11 +61,11 @@
                         <td><?= htmlspecialchars((string) ($cliente['telefono'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars((string) ($cliente['direccion'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
                         <td class="text-center">
-                            <a href="/clientes/editar/<?= htmlspecialchars((string) $cliente['id'], ENT_QUOTES, 'UTF-8') ?>"
+                            <a href="/clientes/editar/<?= (int) $cliente['id'] ?>"
                                class="btn btn-sm btn-warning me-1">
                                 Editar
                             </a>
-                            <a href="/clientes/eliminar/<?= htmlspecialchars((string) $cliente['id'], ENT_QUOTES, 'UTF-8') ?>"
+                            <a href="/clientes/eliminar/<?= (int) $cliente['id'] ?>"
                                class="btn btn-sm btn-danger"
                                onclick="return confirm('¿Seguro que deseas eliminar este cliente?');">
                                 Eliminar
@@ -57,10 +78,12 @@
         </div>
     <?php else: ?>
         <div class="alert alert-info">
-            No hay clientes registrados.
+            No se encontraron clientes.
         </div>
     <?php endif; ?>
+
 </div>
+
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     crossorigin="anonymous"

@@ -12,10 +12,31 @@ class ClientesController extends Controller
 {
     public function index(): void
     {
-        $clientes = Cliente::getAll();
+        $q = trim($_GET['q'] ?? '');
+
+        if ($q !== '') {
+            // 🔍 Búsqueda por nombre de cliente
+            $sql = "
+                SELECT *
+                FROM clientes
+                WHERE nombre LIKE :nombre
+                ORDER BY nombre ASC
+                LIMIT 50
+            ";
+
+            $stmt = \Erpia\Core\Database::getConnection()->prepare($sql);
+            $stmt->bindValue(':nombre', '%' . $q . '%');
+            $stmt->execute();
+
+            $clientes = $stmt->fetchAll();
+        } else {
+            // 📄 Listado normal
+            $clientes = Cliente::getAll();
+        }
 
         View::render('clientes/index', [
             'clientes' => $clientes,
+            'q' => $q,
         ]);
     }
 
