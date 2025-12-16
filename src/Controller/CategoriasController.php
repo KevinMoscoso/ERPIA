@@ -12,10 +12,46 @@ class CategoriasController extends Controller
 {
     public function index(): void
     {
-        $categorias = Categoria::getAll();
+        $q = trim($_GET['q'] ?? '');
+
+        if ($q !== '') {
+            // 🔍 Búsqueda por ID o Nombre
+            if (ctype_digit($q)) {
+                // Buscar por ID
+                $sql = "
+                    SELECT *
+                    FROM categorias
+                    WHERE id = :id
+                    ORDER BY id DESC
+                    LIMIT 50
+                ";
+
+                $stmt = \Erpia\Core\Database::getConnection()->prepare($sql);
+                $stmt->bindValue(':id', (int) $q, \PDO::PARAM_INT);
+            } else {
+                // Buscar por Nombre
+                $sql = "
+                    SELECT *
+                    FROM categorias
+                    WHERE nombre LIKE :nombre
+                    ORDER BY nombre ASC
+                    LIMIT 50
+                ";
+
+                $stmt = \Erpia\Core\Database::getConnection()->prepare($sql);
+                $stmt->bindValue(':nombre', '%' . $q . '%');
+            }
+
+            $stmt->execute();
+            $categorias = $stmt->fetchAll();
+        } else {
+            // 📄 Listado normal
+            $categorias = Categoria::getAll();
+        }
 
         View::render('categorias/index', [
             'categorias' => $categorias,
+            'q' => $q,
         ]);
     }
 

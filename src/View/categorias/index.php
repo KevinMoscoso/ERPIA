@@ -1,5 +1,6 @@
 <?php
 /** @var array $categorias */
+/** @var string $q */
 ?>
 <!doctype html>
 <html lang="es">
@@ -10,42 +11,61 @@
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
         crossorigin="anonymous"
     >
 </head>
 <body>
 <div class="container my-4">
+
+    <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0">Listado de categorías</h1>
         <a href="/categorias/crear" class="btn btn-primary">Crear categoría</a>
     </div>
+
+    <!-- 🔍 BUSCADOR ID / NOMBRE -->
+    <form method="get" action="/categorias" class="mb-3">
+        <div class="input-group">
+            <input
+                type="text"
+                name="q"
+                class="form-control"
+                placeholder="Buscar por ID o nombre de categoría"
+                value="<?= htmlspecialchars($q ?? '', ENT_QUOTES, 'UTF-8') ?>"
+            >
+            <button class="btn btn-primary">Buscar</button>
+
+            <?php if (!empty($q)): ?>
+                <a href="/categorias" class="btn btn-outline-secondary">Limpiar</a>
+            <?php endif; ?>
+        </div>
+    </form>
 
     <?php if (!empty($categorias)): ?>
         <div class="table-responsive">
             <table class="table table-striped table-bordered align-middle">
                 <thead class="table-light">
                 <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Descripción</th>
-                    <th scope="col">Creado</th>
-                    <th scope="col" class="text-center">Acciones</th>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Creado</th>
+                    <th class="text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($categorias as $categoria): ?>
                     <tr>
-                        <td><?= htmlspecialchars((string) $categoria['id'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= (int) $categoria['id'] ?></td>
                         <td><?= htmlspecialchars((string) $categoria['nombre'], ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars((string) ($categoria['descripcion'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars((string) $categoria['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
                         <td class="text-center">
-                            <a href="/categorias/editar/<?= htmlspecialchars((string) $categoria['id'], ENT_QUOTES, 'UTF-8') ?>"
+                            <a href="/categorias/editar/<?= (int) $categoria['id'] ?>"
                                class="btn btn-sm btn-warning me-1">
                                 Editar
                             </a>
-                            <a href="/categorias/eliminar/<?= htmlspecialchars((string) $categoria['id'], ENT_QUOTES, 'UTF-8') ?>"
+                            <a href="/categorias/eliminar/<?= (int) $categoria['id'] ?>"
                                class="btn btn-sm btn-danger"
                                onclick="return confirm('¿Seguro que deseas eliminar esta categoría?');">
                                 Eliminar
@@ -58,13 +78,14 @@
         </div>
     <?php else: ?>
         <div class="alert alert-info">
-            No hay categorías registradas.
+            No se encontraron categorías.
         </div>
     <?php endif; ?>
+
 </div>
+
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"
 ></script>
 </body>
