@@ -12,10 +12,31 @@ class ProveedoresController extends Controller
 {
     public function index(): void
     {
-        $proveedores = Proveedor::getAll();
+        $q = trim($_GET['q'] ?? '');
+
+        if ($q !== '') {
+            // 🔍 Búsqueda por nombre de proveedor
+            $sql = "
+                SELECT *
+                FROM proveedores
+                WHERE nombre LIKE :nombre
+                ORDER BY nombre ASC
+                LIMIT 50
+            ";
+
+            $stmt = \Erpia\Core\Database::getConnection()->prepare($sql);
+            $stmt->bindValue(':nombre', '%' . $q . '%');
+            $stmt->execute();
+
+            $proveedores = $stmt->fetchAll();
+        } else {
+            // 📄 Listado normal
+            $proveedores = Proveedor::getAll();
+        }
 
         View::render('proveedores/index', [
             'proveedores' => $proveedores,
+            'q' => $q,
         ]);
     }
 
