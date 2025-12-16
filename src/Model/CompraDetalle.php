@@ -36,9 +36,9 @@ class CompraDetalle
         $subtotal = $cantidad * $precio;
 
         $sql = "INSERT INTO compra_detalles
-                (compra_id, producto_id, cantidad, precio_unitario, subtotal, created_at)
+                (compra_id, producto_id, cantidad, precio_unitario, subtotal)
                 VALUES
-                (:compra_id, :producto_id, :cantidad, :precio_unitario, :subtotal, NOW())";
+                (:compra_id, :producto_id, :cantidad, :precio_unitario, :subtotal)";
 
         $stmt = self::db()->prepare($sql);
         $stmt->bindValue(':compra_id', (int) $data['compra_id'], PDO::PARAM_INT);
