@@ -1,98 +1,143 @@
 <?php
 /** @var array $factura */
 /** @var array $detalles */
+/** @var string|null $error */
 ?>
 <!doctype html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Detalle de Factura</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detalle de Factura - ERP-IA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+<div class="container py-4">
 
-<div class="container my-4">
-
-    <h1 class="h4 mb-3">Factura <?= htmlspecialchars($factura['numero']) ?></h1>
-
-    <div class="mb-4">
-        <strong>Fecha:</strong> <?= htmlspecialchars($factura['fecha']) ?><br>
-        <strong>Cliente ID:</strong> <?= (int) $factura['cliente_id'] ?><br>
-        <strong>Estado:</strong> <?= htmlspecialchars($factura['estado']) ?>
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="h3 mb-0">
+            Factura <?= htmlspecialchars((string) ($factura['numero'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+        </h1>
+        <a class="btn btn-outline-secondary" href="/facturas">Volver a facturas</a>
     </div>
 
-    <h2 class="h5">Detalle</h2>
+    <!-- Errores -->
+    <?php if ($error === 'stock'): ?>
+        <div class="alert alert-danger">
+            Stock insuficiente para registrar esta salida.
+        </div>
+    <?php endif; ?>
 
-    <table class="table table-bordered table-striped mb-4">
-        <thead>
-        <tr>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Precio Unitario</th>
-            <th>Subtotal</th>
-            <th class="text-center">Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
+    <!-- Info factura -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <strong>Fecha:</strong>
+                    <?= htmlspecialchars((string) $factura['fecha'], ENT_QUOTES, 'UTF-8') ?>
+                </div>
+                <div class="col-md-4">
+                    <strong>Cliente ID:</strong>
+                    <?= (int) $factura['cliente_id'] ?>
+                </div>
+                <div class="col-md-4">
+                    <strong>Estado:</strong>
+                    <span class="badge bg-secondary">
+                        <?= htmlspecialchars((string) $factura['estado'], ENT_QUOTES, 'UTF-8') ?>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <?php if (!empty($detalles)): ?>
-            <?php foreach ($detalles as $d): ?>
+    <!-- Detalles -->
+    <h2 class="h5 mb-2">Detalle</h2>
+    <div class="table-responsive mb-4">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th>Producto</th>
+                <th class="text-end">Cantidad</th>
+                <th class="text-end">Precio Unitario</th>
+                <th class="text-end">Subtotal</th>
+                <th style="width: 120px;">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <?php if (empty($detalles)): ?>
                 <tr>
-                    <td><?= htmlspecialchars($d['producto_nombre'] ?? $d['producto_id']) ?></td>
-                    <td><?= (int) $d['cantidad'] ?></td>
-                    <td><?= number_format((float) $d['precio_unitario'], 2) ?></td>
-                    <td><?= number_format((float) $d['subtotal'], 2) ?></td>
-                    <td class="text-center">
-                        <a href="/facturas/eliminarDetalle/<?= $d['id'] ?>"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('¿Eliminar línea?')">
-                            Eliminar
-                        </a>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No hay productos agregados.
                     </td>
                 </tr>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <tr>
-                <td colspan="5" class="text-center">No hay productos agregados.</td>
-            </tr>
-        <?php endif; ?>
+            <?php else: ?>
+                <?php foreach ($detalles as $d): ?>
+                    <tr>
+                        <td>
+                            <?= htmlspecialchars((string) $d['producto_nombre'], ENT_QUOTES, 'UTF-8') ?>
+                            <div class="text-muted small">ID: <?= (int) $d['producto_id'] ?></div>
+                        </td>
+                        <td class="text-end"><?= (int) $d['cantidad'] ?></td>
+                        <td class="text-end"><?= number_format((float) $d['precio_unitario'], 2) ?></td>
+                        <td class="text-end"><?= number_format((float) $d['subtotal'], 2) ?></td>
+                        <td>
+                            <?php if (($factura['estado'] ?? '') === 'BORRADOR'): ?>
+                                <a class="btn btn-sm btn-outline-danger"
+                                   href="/facturas/eliminarDetalle/<?= (int) $d['id'] ?>"
+                                   onclick="return confirm('¿Eliminar este detalle?');">
+                                    Eliminar
+                                </a>
+                            <?php else: ?>
+                                <span class="text-muted small">Bloqueado</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
 
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 
-    <h2 class="h5">Agregar producto</h2>
+    <!-- Agregar producto -->
+    <?php if (($factura['estado'] ?? '') === 'BORRADOR'): ?>
+        <h2 class="h5 mb-2">Agregar producto</h2>
+        <div class="card">
+            <div class="card-body">
+                <form method="post"
+                      action="/facturas/agregarDetalle/<?= (int) $factura['id'] ?>"
+                      class="row g-3">
 
-    <form method="post" action="/facturas/agregarDetalle/<?= $factura['id'] ?>">
-        <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Producto ID</label>
+                        <input type="number" name="producto_id" class="form-control" required min="1">
+                    </div>
 
-            <div class="col-md-3 mb-3">
-                <label class="form-label">Producto ID</label>
-                <input type="number" name="producto_id" class="form-control" required>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" name="cantidad" class="form-control" required min="1">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Precio Unitario</label>
+                        <input type="number" name="precio_unitario" class="form-control"
+                               required min="0.01" step="0.01">
+                    </div>
+
+                    <div class="col-12">
+                        <button class="btn btn-primary" type="submit">Agregar</button>
+                    </div>
+                </form>
             </div>
-
-            <div class="col-md-3 mb-3">
-                <label class="form-label">Cantidad</label>
-                <input type="number" name="cantidad" class="form-control" required>
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label class="form-label">Precio Unitario</label>
-                <input type="number" step="0.01" name="precio_unitario" class="form-control" required>
-            </div>
-
-            <div class="col-md-3 mb-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">
-                    Agregar
-                </button>
-            </div>
-
         </div>
-    </form>
-
-    <a href="/facturas" class="btn btn-secondary mt-3">Volver a facturas</a>
+    <?php else: ?>
+        <div class="alert alert-info">
+            No se pueden agregar productos: la factura no está en estado BORRADOR.
+        </div>
+    <?php endif; ?>
 
 </div>
-
 </body>
 </html>
