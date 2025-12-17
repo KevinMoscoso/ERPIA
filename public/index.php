@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Erpia\Core\Router;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
+session_start();
 
 try {
     $router = new Router();

@@ -7,14 +7,24 @@ namespace Erpia\Controller;
 use Erpia\Core\Controller;
 use Erpia\Core\View;
 use Erpia\Core\Database;
+use Erpia\Core\Auth;
+use Erpia\Model\Auditoria;
 use Erpia\Model\Compra;
 use Erpia\Model\CompraDetalle;
 use Erpia\Model\InventarioMovimiento;
 
 class ComprasController extends Controller
 {
+    private function userId(): int
+    {
+        $u = Auth::user();
+        return (int) ($u['id'] ?? 0);
+    }
+
     public function index(): void
     {
+        Auth::can('compras.ver');
+
         $numero = isset($_GET['numero']) ? (string) $_GET['numero'] : null;
         $compras = Compra::getAll($numero);
 
@@ -26,6 +36,8 @@ class ComprasController extends Controller
 
     public function crear(): void
     {
+        Auth::can('compras.crear');
+
         View::render('compras/crear', [
             'errors' => [],
             'old' => [],
@@ -34,6 +46,8 @@ class ComprasController extends Controller
 
     public function guardar(): void
     {
+        Auth::can('compras.crear');
+
         $numero = trim((string) ($_POST['numero'] ?? ''));
         $fecha = (string) ($_POST['fecha'] ?? '');
         $proveedorId = (int) ($_POST['proveedor_id'] ?? 0);
@@ -56,12 +70,18 @@ class ComprasController extends Controller
             'proveedor_id' => $proveedorId > 0 ? $proveedorId : null,
         ]);
 
+        if ((int)$compraId > 0) {
+            Auditoria::registrar($this->userId(), 'compra.crear', 'compra:' . (int)$compraId);
+        }
+
         header('Location: /compras/detalle/' . $compraId);
         exit;
     }
 
     public function detalle($id): void
     {
+        Auth::can('compras.ver');
+
         $compraId = (int) $id;
         $compra = Compra::findById($compraId);
 
@@ -79,6 +99,8 @@ class ComprasController extends Controller
 
     public function guardarDetalle($id): void
     {
+        Auth::can('compras.detalle.modificar');
+
         $compraId = (int) $id;
         $compra = Compra::findById($compraId);
 
@@ -118,6 +140,12 @@ class ComprasController extends Controller
             InventarioMovimiento::ajustarStock($productoId, $cantidad);
 
             Compra::recalcularTotal($compraId);
+
+            Auditoria::registrar(
+                $this->userId(),
+                'compra.detalle.agregar',
+                'compra:' . $compraId . '|producto:' . $productoId
+            );
 
             $db->commit();
         } catch (\Throwable $e) {

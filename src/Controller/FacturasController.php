@@ -7,14 +7,27 @@ namespace Erpia\Controller;
 use Erpia\Core\Controller;
 use Erpia\Core\View;
 use Erpia\Core\Database;
+use Erpia\Core\Auth;
+use Erpia\Model\Auditoria;
 use Erpia\Model\Factura;
 use Erpia\Model\FacturaDetalle;
 use Erpia\Model\InventarioMovimiento;
 
 class FacturasController extends Controller
 {
+    private function userId(): int
+    {
+        $u = Auth::user();
+        return (int) ($u['id'] ?? 0);
+    }
+
+    /* =========================
+     * LISTADO
+     * ========================= */
     public function index(): void
     {
+        Auth::can('facturas.ver');
+
         $q = trim((string) ($_GET['q'] ?? ''));
 
         $facturas = $q !== ''
@@ -28,8 +41,13 @@ class FacturasController extends Controller
         ]);
     }
 
+    /* =========================
+     * CREAR FACTURA
+     * ========================= */
     public function crear(): void
     {
+        Auth::can('facturas.crear');
+
         View::render('facturas/crear', [
             'errors' => [],
             'old' => [],
@@ -38,6 +56,8 @@ class FacturasController extends Controller
 
     public function guardar(): void
     {
+        Auth::can('facturas.crear');
+
         $data = [
             'numero'     => trim((string) ($_POST['numero'] ?? '')),
             'fecha'      => (string) ($_POST['fecha'] ?? ''),
@@ -53,13 +73,25 @@ class FacturasController extends Controller
             return;
         }
 
+        $db = Database::getConnection();
         Factura::create($data);
+
+        // Auditoría (si lastInsertId no aplica por conexión distinta, igual no rompe)
+        $facturaId = (int) $db->lastInsertId();
+        if ($facturaId > 0) {
+            Auditoria::registrar($this->userId(), 'factura.crear', 'factura:' . $facturaId);
+        }
+
         header('Location: /facturas');
         exit;
     }
 
+    /* =========================
+     * EDITAR FACTURA
+     * ========================= */
     public function editar(int $id): void
     {
+        Auth::can('facturas.editar');
         Factura::assertPuedeEditar($id);
 
         $factura = Factura::findById($id);
@@ -75,6 +107,7 @@ class FacturasController extends Controller
 
     public function actualizar(int $id): void
     {
+        Auth::can('facturas.editar');
         Factura::assertPuedeEditar($id);
 
         $data = [
@@ -85,21 +118,39 @@ class FacturasController extends Controller
         ];
 
         Factura::update($id, $data);
+
+        Auditoria::registrar($this->userId(), 'factura.actualizar', 'factura:' . $id);
+
         header('Location: /facturas');
         exit;
     }
 
+    /* =========================
+     * ELIMINAR FACTURA
+     * ========================= */
     public function eliminar(int $id): void
     {
+        Auth::can('facturas.eliminar');
+
         Factura::delete($id);
+
+        Auditoria::registrar($this->userId(), 'factura.eliminar', 'factura:' . $id);
+
         header('Location: /facturas');
         exit;
     }
 
+    /* =========================
+     * EMITIR / ANULAR (Flujo)
+     * ========================= */
     public function emitir(int $id): void
     {
+        Auth::can('facturas.emitir');
+
         try {
             Factura::emitir($id);
+            Auditoria::registrar($this->userId(), 'factura.emitir', 'factura:' . $id);
+
             header('Location: /facturas');
             exit;
         } catch (\Throwable $e) {
@@ -110,8 +161,12 @@ class FacturasController extends Controller
 
     public function anular(int $id): void
     {
+        Auth::can('facturas.anular');
+
         try {
             Factura::anular($id);
+            Auditoria::registrar($this->userId(), 'factura.anular', 'factura:' . $id);
+
             header('Location: /facturas');
             exit;
         } catch (\Throwable $e) {
@@ -120,9 +175,14 @@ class FacturasController extends Controller
         }
     }
 
+    /* =========================
+     * DETALLE DE FACTURA
+     * ========================= */
     public function detalle(int $facturaId): void
     {
-        $factura  = Factura::findById($facturaId);
+        Auth::can('facturas.detalle');
+
+        $factura = Factura::findById($facturaId);
         if (!$factura) {
             throw new \RuntimeException('Factura no encontrada');
         }
@@ -136,8 +196,12 @@ class FacturasController extends Controller
         ]);
     }
 
+    /* =========================
+     * MODIFICAR DETALLES
+     * ========================= */
     public function agregarDetalle(int $facturaId): void
     {
+        Auth::can('facturas.detalle.modificar');
         Factura::assertPuedeModificarDetalles($facturaId);
 
         $data = [
@@ -188,6 +252,12 @@ class FacturasController extends Controller
             // 3) total
             Factura::recalcularTotal($facturaId);
 
+            Auditoria::registrar(
+                $this->userId(),
+                'factura.detalle.agregar',
+                'factura:' . $facturaId . '|producto:' . $data['producto_id']
+            );
+
             $db->commit();
         } catch (\Throwable $e) {
             $db->rollBack();
@@ -206,6 +276,8 @@ class FacturasController extends Controller
         }
 
         $facturaId = (int) ($detalle['factura_id'] ?? 0);
+
+        Auth::can('facturas.detalle.modificar');
         Factura::assertPuedeModificarDetalles($facturaId);
 
         $db = Database::getConnection();
@@ -223,6 +295,12 @@ class FacturasController extends Controller
             );
 
             Factura::recalcularTotal($facturaId);
+
+            Auditoria::registrar(
+                $this->userId(),
+                'factura.detalle.eliminar',
+                'factura:' . $facturaId . '|detalle:' . $detalleId
+            );
 
             $db->commit();
         } catch (\Throwable $e) {

@@ -6,14 +6,24 @@ namespace Erpia\Controller;
 
 use Erpia\Core\View;
 use Erpia\Core\Database;
+use Erpia\Core\Auth;
+use Erpia\Model\Auditoria;
 use Erpia\Model\InventarioMovimiento;
 use PDO;
 
 class InventarioController
 {
+    private function userId(): int
+    {
+        $u = Auth::user();
+        return (int) ($u['id'] ?? 0);
+    }
+
     public function index(): void
     {
-        $fecha = trim($_GET['fecha'] ?? '');
+        Auth::can('inventario.ver');
+
+        $fecha = trim((string) ($_GET['fecha'] ?? ''));
 
         $sql = "
             SELECT 
@@ -55,6 +65,8 @@ class InventarioController
 
     public function producto(int $id): void
     {
+        Auth::can('inventario.ver');
+
         $movimientos = InventarioMovimiento::getByProducto($id);
 
         View::render('inventario/producto', [
@@ -65,11 +77,15 @@ class InventarioController
 
     public function ajustar(int $id): void
     {
+        Auth::can('inventario.ajustar');
+
         View::render('inventario/ajustar', ['productoId' => $id]);
     }
 
     public function guardarAjuste(int $id): void
     {
+        Auth::can('inventario.ajustar');
+
         $cantidad = (int) ($_POST['cantidad'] ?? 0);
         $obs = trim((string) ($_POST['observacion'] ?? ''));
 
@@ -96,6 +112,12 @@ class InventarioController
             ]);
 
             InventarioMovimiento::ajustarStock($id, $cantidad);
+
+            Auditoria::registrar(
+                $this->userId(),
+                'inventario.ajuste',
+                'producto:' . $id . '|delta:' . $cantidad
+            );
 
             $db->commit();
         } catch (\Throwable $e) {
