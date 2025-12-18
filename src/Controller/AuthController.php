@@ -32,7 +32,7 @@ class AuthController
             'permisos' => $permisos,
         ]);
 
-        header('Location: /');
+        header('Location: /dashboard');
     }
 
     public function logout(): void

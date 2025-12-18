@@ -11,9 +11,22 @@ class Router
         $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
         $path = trim((string) parse_url($requestUri, PHP_URL_PATH), '/');
 
-        $segments = $path === '' ? [] : explode('/', $path);
+        // 🔁 Aliases amigables
+        if ($path === '' || $path === 'home') {
+            $path = 'dashboard';
+        }
 
-        $controllerSegment = $segments[0] ?? 'home';
+        if ($path === 'login') {
+            $path = 'auth/login';
+        }
+
+        if ($path === 'logout') {
+            $path = 'auth/logout';
+        }
+
+        $segments = explode('/', $path);
+
+        $controllerSegment = $segments[0] ?? 'dashboard';
         $actionSegment     = $segments[1] ?? 'index';
         $params            = array_slice($segments, 2);
 
