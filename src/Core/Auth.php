@@ -20,16 +20,20 @@ class Auth
         }
     }
 
-    public static function can(string $permiso): void
+    public static function can(string $permiso, bool $abort = true): bool
     {
         self::check();
 
-        $user = $_SESSION['user'];
-        if (!in_array($permiso, $user['permisos'], true)) {
+        $user = $_SESSION['user'] ?? [];
+        $ok = in_array($permiso, $user['permisos'] ?? [], true);
+
+        if (!$ok && $abort) {
             http_response_code(403);
             echo 'Acceso denegado';
             exit;
         }
+
+        return $ok;
     }
 
     public static function login(array $usuario): void

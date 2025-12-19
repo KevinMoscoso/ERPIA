@@ -7,6 +7,8 @@
 </head>
 <body>
 
+<?php use Erpia\Core\Auth; ?>
+
 <div class="container py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -15,10 +17,10 @@
     </div>
 
     <div class="alert alert-success">
-        Bienvenido <strong><?= htmlspecialchars($user['nombre']) ?></strong>
+        Bienvenido <strong><?= htmlspecialchars($user['nombre'], ENT_QUOTES, 'UTF-8') ?></strong>
     </div>
 
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
 
         <div class="col-md-3">
             <a href="/facturas" class="btn btn-primary w-100">Facturas</a>
@@ -37,6 +39,31 @@
         </div>
 
     </div>
+
+    <!-- BLOQUE ADMIN -->
+    <?php if (
+        Auth::can('usuarios.gestionar', false) ||
+        Auth::can('roles.gestionar', false)
+    ): ?>
+        <hr>
+
+        <div class="d-flex flex-wrap gap-2 mt-3">
+
+            <?php if (Auth::can('usuarios.gestionar', false)): ?>
+                <a href="/usuarios" class="btn btn-outline-primary">
+                    👤 Usuarios
+                </a>
+            <?php endif; ?>
+
+            <?php if (Auth::can('roles.gestionar', false)): ?>
+                <a href="/roles" class="btn btn-outline-secondary">
+                    🔐 Roles y permisos
+                </a>
+            <?php endif; ?>
+
+        </div>
+    <?php endif; ?>
+
 </div>
 
 </body>
