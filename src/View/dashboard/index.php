@@ -20,42 +20,46 @@
         Bienvenido <strong><?= htmlspecialchars($user['nombre'], ENT_QUOTES, 'UTF-8') ?></strong>
     </div>
 
+    <!-- MÓDULOS PRINCIPALES -->
     <div class="row g-3 mb-3">
 
-        <div class="col-md-3">
-            <a href="/facturas" class="btn btn-primary w-100">Facturas</a>
-        </div>
+        <?php if (Auth::has('facturas.ver')): ?>
+            <div class="col-md-3">
+                <a href="/facturas" class="btn btn-primary w-100">Facturas</a>
+            </div>
 
-        <div class="col-md-3">
-            <a href="/clientes" class="btn btn-primary w-100">Clientes</a>
-        </div>
+            <div class="col-md-3">
+                <a href="/clientes" class="btn btn-primary w-100">Clientes</a>
+            </div>
+        <?php endif; ?>
 
-        <div class="col-md-3">
-            <a href="/inventario" class="btn btn-primary w-100">Inventario</a>
-        </div>
+        <?php if (Auth::has('inventario.ver')): ?>
+            <div class="col-md-3">
+                <a href="/inventario" class="btn btn-primary w-100">Inventario</a>
+            </div>
+        <?php endif; ?>
 
-        <div class="col-md-3">
-            <a href="/compras" class="btn btn-primary w-100">Compras</a>
-        </div>
+        <?php if (Auth::has('compras.ver')): ?>
+            <div class="col-md-3">
+                <a href="/compras" class="btn btn-primary w-100">Compras</a>
+            </div>
+        <?php endif; ?>
 
     </div>
 
     <!-- BLOQUE ADMIN -->
-    <?php if (
-        Auth::can('usuarios.gestionar', false) ||
-        Auth::can('roles.gestionar', false)
-    ): ?>
+    <?php if (Auth::has('usuarios.gestionar') || Auth::has('roles.gestionar')): ?>
         <hr>
 
         <div class="d-flex flex-wrap gap-2 mt-3">
 
-            <?php if (Auth::can('usuarios.gestionar', false)): ?>
+            <?php if (Auth::has('usuarios.gestionar')): ?>
                 <a href="/usuarios" class="btn btn-outline-primary">
                     👤 Usuarios
                 </a>
             <?php endif; ?>
 
-            <?php if (Auth::can('roles.gestionar', false)): ?>
+            <?php if (Auth::has('roles.gestionar')): ?>
                 <a href="/roles" class="btn btn-outline-secondary">
                     🔐 Roles y permisos
                 </a>

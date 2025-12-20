@@ -45,4 +45,25 @@ class Auth
     {
         session_destroy();
     }
+
+    public static function has(string $permiso): bool
+    {
+        if (!isset($_SESSION['user']) || !is_array($_SESSION['user'])) {
+            return false;
+        }
+
+        $permisos = $_SESSION['user']['permisos'] ?? [];
+        if (!is_array($permisos)) {
+            return false;
+        }
+
+        return in_array($permiso, $permisos, true);
+    }
+
+    public static function permisos(): array
+    {
+        $u = self::user();
+        $p = $u['permisos'] ?? [];
+        return is_array($p) ? $p : [];
+    }
 }
