@@ -31,6 +31,12 @@
             <div class="col-md-3">
                 <a href="/clientes" class="btn btn-primary w-100">Clientes</a>
             </div>
+
+            <div class="col-md-3">
+                <a href="/reportes/facturas" class="btn btn-outline-secondary w-100">
+                    📊 Reporte Facturas
+                </a>
+            </div>
         <?php endif; ?>
 
         <?php if (Auth::has('inventario.ver')): ?>

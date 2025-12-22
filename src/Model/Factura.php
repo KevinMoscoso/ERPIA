@@ -262,4 +262,44 @@ class Factura extends Model
         $estado = strtoupper(trim($estado));
         return in_array($estado, self::ESTADOS_VALIDOS, true) ? $estado : 'BORRADOR';
     }
+
+    public static function reportePorFechas(string $desde, string $hasta, ?string $estado = null): array
+    {
+        $d1 = \DateTime::createFromFormat('Y-m-d', $desde);
+        $d2 = \DateTime::createFromFormat('Y-m-d', $hasta);
+
+        if (!$d1 || $d1->format('Y-m-d') !== $desde) {
+            return [];
+        }
+        if (!$d2 || $d2->format('Y-m-d') !== $hasta) {
+            return [];
+        }
+
+        $db = \Erpia\Core\Database::getConnection();
+
+        $sql = "
+            SELECT f.id, f.numero, f.fecha, f.cliente_id, f.total, f.estado,
+                   c.nombre AS cliente_nombre
+            FROM facturas f
+            LEFT JOIN clientes c ON c.id = f.cliente_id
+            WHERE f.fecha >= :desde AND f.fecha <= :hasta
+        ";
+
+        $params = [
+            ':desde' => $desde,
+            ':hasta' => $hasta,
+        ];
+
+        if ($estado !== null && $estado !== '') {
+            $sql .= " AND f.estado = :estado";
+            $params[':estado'] = $estado;
+        }
+
+        $sql .= " ORDER BY f.fecha DESC, f.id DESC";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }
