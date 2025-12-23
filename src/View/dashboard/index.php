@@ -71,6 +71,12 @@
                 </a>
             <?php endif; ?>
 
+            <?php if (Auth::has('usuarios.gestionar') || Auth::has('roles.gestionar')): ?>
+                <a href="/auditoria" class="btn btn-outline-dark">
+                    🕵 Auditoría
+                </a>
+            <?php endif; ?>
+
         </div>
     <?php endif; ?>
 
