@@ -90,4 +90,24 @@ class Compra
         $stmt->bindValue(':compra_id_main', $compraId, PDO::PARAM_INT);
         $stmt->execute();
     }
+
+    public static function getRecientes(int $limit = 5): array
+    {
+        $db = \Erpia\Core\Database::getConnection();
+
+        $limit = max(1, min(50, $limit));
+
+        $sql = "
+            SELECT c.id, c.numero, c.fecha, c.total, c.proveedor_id,
+                   p.nombre AS proveedor_nombre
+            FROM compras c
+            LEFT JOIN proveedores p ON p.id = c.proveedor_id
+            ORDER BY c.fecha DESC, c.id DESC
+            LIMIT {$limit}
+        ";
+
+        $stmt = $db->query($sql);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+    }
 }

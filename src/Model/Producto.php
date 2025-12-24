@@ -62,4 +62,25 @@ class Producto extends Model
         $stmt = $db->prepare("DELETE FROM productos WHERE id = ?");
         return $stmt->execute([$id]);
     }
+
+    public static function getStockBajo(int $umbral = 5, int $limit = 5): array
+    {
+        $db = \Erpia\Core\Database::getConnection();
+
+        $limit = max(1, min(50, $limit));
+        $umbral = max(0, $umbral);
+
+        $sql = "
+            SELECT id, nombre, stock
+            FROM productos
+            WHERE stock <= :umbral
+            ORDER BY stock ASC, id ASC
+            LIMIT {$limit}
+        ";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':umbral' => $umbral]);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+    }
 }

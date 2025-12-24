@@ -302,4 +302,50 @@ class Factura extends Model
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    public static function sumHoy(): float
+    {
+        $db = \Erpia\Core\Database::getConnection();
+
+        $sql = "
+            SELECT COALESCE(SUM(total), 0) AS total
+            FROM facturas
+            WHERE fecha = CURDATE()
+              AND estado IN ('EMITIDA', 'PAGADA')
+        ";
+
+        $stmt = $db->query($sql);
+        $val = $stmt->fetchColumn();
+
+        return (float) ($val ?? 0);
+    }
+
+    public static function sumMesActual(): float
+    {
+        $db = \Erpia\Core\Database::getConnection();
+
+        $sql = "
+            SELECT COALESCE(SUM(total), 0) AS total
+            FROM facturas
+            WHERE YEAR(fecha) = YEAR(CURDATE())
+              AND MONTH(fecha) = MONTH(CURDATE())
+              AND estado IN ('EMITIDA', 'PAGADA')
+        ";
+
+        $stmt = $db->query($sql);
+        $val = $stmt->fetchColumn();
+
+        return (float) ($val ?? 0);
+    }
+
+    public static function countPendientes(): int
+    {
+        $db = \Erpia\Core\Database::getConnection();
+
+        $sql = "SELECT COUNT(*) FROM facturas WHERE estado = 'EMITIDA'";
+        $stmt = $db->query($sql);
+        $val = $stmt->fetchColumn();
+
+        return (int) ($val ?? 0);
+    }
 }
