@@ -46,13 +46,33 @@ class InventarioMovimiento
         return $stmt->execute();
     }
 
-    public static function ajustarStock(int $productoId, int $delta): void
+    public static function ajustarStockSeguro(int $productoId, int $delta): void 
     {
-        $sql = "UPDATE productos SET stock = stock + :delta WHERE id = :id";
-        $stmt = self::db()->prepare($sql);
-        $stmt->bindValue(':delta', $delta, PDO::PARAM_INT);
-        $stmt->bindValue(':id', $productoId, PDO::PARAM_INT);
-        $stmt->execute();
+        $db = self::db();
+
+        // 1. Bloquear el registro del producto
+        $stmt = $db->prepare(
+            "SELECT stock FROM productos WHERE id = :id FOR UPDATE"
+        );
+        $stmt->execute([':id' => $productoId]);
+        $stockActual = (int) $stmt->fetchColumn();
+
+        // 2. Calcular nuevo stock
+        $nuevoStock = $stockActual + $delta;
+
+        // 3. Validar invariante
+        if ($nuevoStock < 0) {
+            throw new \RuntimeException('Stock insuficiente');
+        }
+
+        // 4. Actualizar stock
+        $stmt = $db->prepare(
+            "UPDATE productos SET stock = :stock WHERE id = :id"
+        );
+        $stmt->execute([
+            ':stock' => $nuevoStock,
+            ':id' => $productoId,
+        ]);
     }
 
     public static function registrarSalidaFactura(int $productoId, int $cantidad, int $facturaId, ?string $obs = null): void

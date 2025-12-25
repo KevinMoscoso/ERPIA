@@ -102,17 +102,20 @@ class InventarioController
         $db->beginTransaction();
 
         try {
+            // 1. Ajustar stock de forma segura (valida + bloquea)
+            InventarioMovimiento::ajustarStockSeguro($id, $cantidad);
+
+            // 2. Registrar movimiento SOLO si pasó la validación
             InventarioMovimiento::registrarMovimiento([
                 'producto_id'     => $id,
                 'tipo'            => 'AJUSTE',
-                'cantidad'        => $cantidad, // delta real
+                'cantidad'        => $cantidad,
                 'referencia_tipo' => 'AJUSTE',
                 'referencia_id'   => null,
                 'observacion'     => $obs,
             ]);
 
-            InventarioMovimiento::ajustarStock($id, $cantidad);
-
+            // 3. Auditoría
             Auditoria::registrar(
                 $this->userId(),
                 'inventario.ajuste',
@@ -122,7 +125,10 @@ class InventarioController
             $db->commit();
         } catch (\Throwable $e) {
             $db->rollBack();
-            throw $e;
+
+            // Manejo controlado del error
+            header('Location: /inventario/ajustar/' . $id . '?error=stock');
+            exit;
         }
 
         header('Location: /inventario/producto/' . $id);
