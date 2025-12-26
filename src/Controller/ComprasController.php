@@ -121,26 +121,31 @@ class ComprasController extends Controller
         $db->beginTransaction();
 
         try {
+            // 1. Ajustar stock de forma SEGURA (nunca negativo)
+            InventarioMovimiento::ajustarStockSeguro($productoId, $cantidad);
+
+            // 2. Registrar movimiento SOLO si el stock se ajustó correctamente
+            InventarioMovimiento::registrarMovimiento([
+                'producto_id'     => $productoId,
+                'tipo'            => 'ENTRADA',
+                'cantidad'        => $cantidad,
+                'referencia_tipo' => 'COMPRA',
+                'referencia_id'   => $compraId,
+                'observacion'     => 'Entrada por compra ' . ($compra['numero'] ?? (string) $compraId),
+            ]);
+
+            // 3. Crear detalle de compra
             CompraDetalle::create([
-                'compra_id' => $compraId,
-                'producto_id' => $productoId,
-                'cantidad' => $cantidad,
+                'compra_id'       => $compraId,
+                'producto_id'     => $productoId,
+                'cantidad'        => $cantidad,
                 'precio_unitario' => $precio,
             ]);
 
-            InventarioMovimiento::registrarMovimiento([
-                'producto_id' => $productoId,
-                'tipo' => 'ENTRADA',
-                'cantidad' => $cantidad,
-                'referencia_tipo' => 'COMPRA',
-                'referencia_id' => $compraId,
-                'observacion' => 'Entrada por compra ' . ($compra['numero'] ?? (string) $compraId),
-            ]);
-
-            InventarioMovimiento::ajustarStock($productoId, $cantidad);
-
+            // 4. Recalcular total
             Compra::recalcularTotal($compraId);
 
+            // 5. Auditoría
             Auditoria::registrar(
                 $this->userId(),
                 'compra.detalle.agregar',
@@ -150,7 +155,8 @@ class ComprasController extends Controller
             $db->commit();
         } catch (\Throwable $e) {
             $db->rollBack();
-            throw $e;
+            header('Location: /compras/detalle/' . $compraId . '?error=stock');
+            exit;
         }
 
         header('Location: /compras/detalle/' . $compraId);
