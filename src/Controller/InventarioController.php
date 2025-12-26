@@ -24,12 +24,14 @@ class InventarioController
         Auth::can('inventario.ver');
 
         $fecha = trim((string) ($_GET['fecha'] ?? ''));
+        $producto = trim((string) ($_GET['producto'] ?? ''));
 
         $sql = "
             SELECT 
                 im.id,
                 im.producto_id,
                 p.nombre AS producto_nombre,
+                p.stock AS stock_actual,
                 im.tipo,
                 im.cantidad,
                 im.referencia_tipo,
@@ -49,7 +51,12 @@ class InventarioController
 
         if ($fecha !== '') {
             $sql .= " AND DATE(im.created_at) = :fecha ";
-            $params['fecha'] = $fecha;
+            $params[':fecha'] = $fecha;
+        }
+
+        if ($producto !== '') {
+            $sql .= " AND p.nombre LIKE :producto ";
+            $params[':producto'] = '%' . $producto . '%';
         }
 
         $sql .= " ORDER BY im.created_at DESC LIMIT 50";
@@ -60,6 +67,7 @@ class InventarioController
         View::render('inventario/index', [
             'movimientos' => $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [],
             'fecha' => $fecha,
+            'producto' => $producto,
         ]);
     }
 
