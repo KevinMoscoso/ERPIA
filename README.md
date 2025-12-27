@@ -33,4 +33,3 @@
 ```bash
 git clone https://github.com/KevinMoscoso/erpia.git
 cd erpia
-git checkout ia
