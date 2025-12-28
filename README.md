@@ -119,45 +119,7 @@ return [
 
 ### Paso 6 — Ejecutar el proyecto
 
-#### Opción A (recomendada): Apache con DocumentRoot apuntando a `/public` (GRATIS)
-
-Esto **no es de paga**. Es la configuración típica con XAMPP/Laragon.
-
-**Por qué es importante**: garantiza que solo `public/` sea accesible desde el navegador (más seguro).
-
-**Ejemplo VirtualHost (Apache):**
-
-```apache
-<VirtualHost *:80>
-    ServerName erpia.local
-    DocumentRoot "C:/xampp/htdocs/erpia/public"
-
-    <Directory "C:/xampp/htdocs/erpia/public">
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-Luego edita el archivo `hosts` (Windows):
-
-- `C:\Windows\System32\drivers\etc\hosts`
-
-Agrega:
-
-```text
-127.0.0.1 erpia.local
-```
-
-Reinicia Apache y abre:
-
-```text
-http://erpia.local
-```
-
-> Si usas Laragon, el flujo es similar (VirtualHost y hosts), solo cambian rutas.
-
-#### Alternativa (también gratis): servidor embebido de PHP
+#### Servidor embebido de PHP
 
 Desde la raíz del proyecto:
 
