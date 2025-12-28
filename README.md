@@ -1,104 +1,218 @@
-# Erpia
+# ERPia — ERP en PHP (MVC) + MySQL, desarrollado iterativamente con apoyo de IA
 
-**Erpia** es un sistema ERP experimental desarrollado como parte de un proyecto de tesis, orientado a pequeñas y medianas empresas. Permite gestionar facturación, inventario, compras, clientes, proveedores, reportes operativos y auditoría con seguridad RBAC.
+ERPia es un ERP web ligero construido en **PHP 8+** con un **MVC propio**, diseñado para ser **funcional, seguro y fácil de instalar** en cualquier computador con PHP + MySQL. El proyecto incluye módulos operativos típicos de un ERP (ventas, compras, inventario), además de **RBAC (roles/permisos)** y **auditoría** para trazabilidad.
+
+Repositorio (rama estable): https://github.com/KevinMoscoso/erpia (usar `main`)
 
 ---
 
 ## Características
 
-- Módulos núcleo: Facturas, Clientes, Proveedores, Productos, Categorías, Pagos.
-- Inventario con trazabilidad (kardex y stock en tiempo real).
-- Compras con control de stock.
-- Seguridad basada en roles y permisos (RBAC).
-- Reportes operativos por fechas.
-- Auditoría visible filtrable por usuario y fechas.
-- Dashboard con KPIs relevantes.
-- Arquitectura MVC en PHP con MySQL.
+- **Facturación** (Facturas + Detalles + Pagos) con estados: `BORRADOR`, `EMITIDA`, `PAGADA`, `ANULADA`
+- **Inventario + Kardex** (movimientos: entrada/salida/ajuste) con **stock seguro** (no permite negativo)
+- **Compras** (Compras + Detalles) con entradas a inventario
+- **Seguridad RBAC** (usuarios, roles, permisos) y **UI por permisos**
+- **Auditoría visible** (filtro por usuario y fechas)
+- **Reportes** (por fechas/estado) según los permisos
 
 ---
 
 ## Requisitos
 
-- **PHP** 8.0 o superior
-- **MySQL / MariaDB** 8+
-- Extensiones PHP: pdo_mysql, mbstring, json, openssl
-- Servidor web (Apache o Nginx)
-
----
-
-## Instalación
-
-### Clonar el repositorio
-# ERPia
-
-ERPia es un **ERP experimental desarrollado en PHP (MVC) + MySQL**, construido como parte de un **proyecto de tesis** enfocado en comparar el desarrollo de un ERP “humano” vs un ERP “generado/dirigido por IA”.
-
-El sistema está orientado a pequeñas y medianas empresas y permite gestionar **facturación, inventario (kardex), compras, clientes, proveedores, reportes operativos y auditoría**, todo bajo un esquema de **seguridad RBAC (roles y permisos)**.
-
----
-
-## Características principales
-
-- **Módulos núcleo**
-  - Facturas (estados: BORRADOR/EMITIDA/PAGADA/ANULADA)
-  - Clientes, Proveedores
-  - Productos, Categorías
-  - Pagos (afecta estados de factura)
-- **Inventario**
-  - Kardex / movimientos (entradas, salidas, ajustes)
-  - Validación de stock (no permite negativos)
-- **Compras**
-  - Compras + detalle
-  - Entrada automática de stock por compra
-- **Seguridad**
-  - Login y sesiones
-  - RBAC: Roles + Permisos
-  - Auditoría de acciones críticas
-- **Reportes / Visualización**
-  - Reporte de facturas por rango de fechas
-  - Auditoría visible filtrable por usuario y fechas
-  - Dashboard con accesos según permisos
-
----
-
-## Tecnologías
-
-- PHP 8+
-- MySQL / MariaDB
-- PDO (prepared statements)
-- Bootstrap 5 (CDN)
-- Arquitectura MVC propia
-- Composer (autoload PSR-4)
-
----
-
-## Requisitos
-
-- **PHP 8.0 o superior**
-  - Extensiones recomendadas:
-    - pdo_mysql
-    - mbstring
-    - json
-    - openssl
+- **PHP 8.0+**
+- Extensiones PHP: `pdo`, `pdo_mysql`
 - **MySQL / MariaDB**
-- **MySQL Workbench** (para crear/importar la base)
 - **Composer**
 - Servidor web:
-  - Apache (XAMPP / Laragon / WAMP) recomendado, o
-  - Servidor embebido de PHP (para pruebas)
+  - Recomendado: **Apache** (XAMPP / Laragon / WAMP)
+  - Alternativa: servidor embebido de PHP (para pruebas)
 
 ---
 
-# Instalación (para cualquier computador)
+## Instalación (paso a paso)
 
-## 1) Clonar el repositorio
-
-Clona el proyecto y entra al directorio:
+### Paso 1 — Clonar el proyecto (opción B)
 
 ```bash
 git clone https://github.com/KevinMoscoso/erpia.git
 cd erpia
+git checkout main
+```
+
+> Nota: `main` debe ser la rama estable para que cualquiera pueda usar el sistema sin ajustes adicionales.
+
+---
+
+### Paso 2 — Instalar dependencias (Composer)
+
+Para uso normal (usuario final / demo / producción):
 
 ```bash
-git clone https://github.com/KevinMoscoso/erpia.git
-cd erpia
+composer install --no-dev
+```
+
+Para desarrollo (si estás contribuyendo o agregando tooling):
+
+```bash
+composer install
+```
+
+> ¿Es obligatorio `--no-dev`? No. Es recomendable para usuario final porque instala solo lo necesario.
+
+---
+
+### Paso 3 — Crear la base de datos
+
+Crea un schema vacío llamado `erpia` (recomendado `utf8mb4`):
+
+```sql
+CREATE DATABASE erpia CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+```
+
+---
+
+### Paso 4 — Importar la base de datos inicial (instalación “tipo ERP”)
+
+Para que cualquiera instale ERPia de forma consistente, el repositorio incluye un SQL de instalación **limpio**:
+
+- `database/erpia_clean.sql`
+
+Ese archivo debe contener:
+- **todas las tablas** con columnas, índices y **foreign keys**,
+- **datos mínimos**: roles, permisos, rol_permiso, y un usuario admin inicial,
+- **sin datos de pruebas** (no clientes/facturas/compras reales).
+
+#### Importación usando MySQL Workbench (recomendado)
+
+1. Abre **MySQL Workbench** y conéctate a tu servidor.
+2. Crea el schema `erpia` (si no lo hiciste).
+3. Selecciona `erpia` como schema por defecto (doble click para que quede en negrita).
+4. Ve a **File → Open SQL Script** y abre:
+   - `database/erpia_clean.sql`
+5. Ejecuta el script completo (ícono del rayo ⚡ / Execute).
+
+---
+
+### Paso 5 — Configurar credenciales (cada usuario usa las suyas)
+
+Edita:
+
+- `config/config.php`
+
+Ejemplo:
+
+```php
+<?php
+
+return [
+    'db' => [
+        'host' => 'localhost',
+        'dbname' => 'erpia',
+        'user' => 'root',
+        'password' => 'TU_PASSWORD',
+        'charset' => 'utf8mb4'
+    ]
+];
+```
+
+---
+
+### Paso 6 — Ejecutar el proyecto
+
+#### Opción A (recomendada): Apache con DocumentRoot apuntando a `/public` (GRATIS)
+
+Esto **no es de paga**. Es la configuración típica con XAMPP/Laragon.
+
+**Por qué es importante**: garantiza que solo `public/` sea accesible desde el navegador (más seguro).
+
+**Ejemplo VirtualHost (Apache):**
+
+```apache
+<VirtualHost *:80>
+    ServerName erpia.local
+    DocumentRoot "C:/xampp/htdocs/erpia/public"
+
+    <Directory "C:/xampp/htdocs/erpia/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+```
+
+Luego edita el archivo `hosts` (Windows):
+
+- `C:\Windows\System32\drivers\etc\hosts`
+
+Agrega:
+
+```text
+127.0.0.1 erpia.local
+```
+
+Reinicia Apache y abre:
+
+```text
+http://erpia.local
+```
+
+> Si usas Laragon, el flujo es similar (VirtualHost y hosts), solo cambian rutas.
+
+#### Alternativa (también gratis): servidor embebido de PHP
+
+Desde la raíz del proyecto:
+
+```bash
+php -S localhost:8000 -t public
+```
+
+Abre:
+
+```text
+http://localhost:8000
+```
+
+---
+
+### Paso 7 — Acceso inicial
+
+El SQL de instalación crea un admin inicial:
+
+- **Email:** `admin@erpia.local`
+- **Contraseña:** `admin`
+
+Pasos recomendados al primer ingreso:
+1. Inicia sesión con el admin.
+2. Cambia la contraseña.
+3. Crea usuarios reales (VENTAS / INVENTARIO / COMPRAS) y asigna roles.
+4. Verifica que el dashboard muestre accesos según permisos.
+
+---
+
+## Verificación rápida (post-instalación)
+
+- Puedes abrir el dashboard y navegar según permisos del usuario.
+- Comprueba que:
+  - `Inventario` registra movimientos y respeta stock no negativo.
+  - `Compras` incrementa stock al agregar detalles.
+  - `Auditoría` registra acciones y permite filtrar por fechas/usuario.
+  - `Reportes` funcionan con filtros simples (fechas/estado).
+
+---
+
+## Solución de problemas (rápido)
+
+- **“Error de conexión DB”**
+  - Revisa `config/config.php` (host, usuario, password).
+  - Confirma que MySQL está encendido.
+  - Confirma que importaste `database/erpia_clean.sql` en el schema correcto (`erpia`).
+
+- **Error 500 o “Application error”**
+  - Asegúrate de haber ejecutado `composer install`.
+  - Verifica que el servidor apunte a `public/`.
+  - Revisa que PHP sea 8+.
+
+---
+
+## Autor
+
+Kevin Moscoso — ERPia
