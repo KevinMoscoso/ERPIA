@@ -1,9 +1,16 @@
 <?php
+
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+use Erpia\Core\Router;
 
-use Erpia\Controller\HomeController;
+require dirname(__DIR__) . '/vendor/autoload.php';
+session_start();
 
-$controller = new HomeController();
-$controller->index();
+try {
+    $router = new Router();
+    $router->dispatch();
+} catch (\Throwable $e) {
+    http_response_code(500);
+    echo 'Application error: ' . $e->getMessage();
+}

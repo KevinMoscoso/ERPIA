@@ -1,0 +1,68 @@
+<?php
+/** @var array $errors */
+/** @var array $old */
+
+$errors = $errors ?? [];
+$old = $old ?? [];
+?>
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Crear proveedor - ERP-IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        crossorigin="anonymous"
+    >
+</head>
+<body>
+<div class="container my-4">
+    <h1 class="h3 mb-3">Crear proveedor</h1>
+
+    <form action="/proveedores/guardar" method="post" novalidate>
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <input
+                type="text"
+                name="nombre"
+                class="form-control<?= isset($errors['nombre']) ? ' is-invalid' : '' ?>"
+                value="<?= htmlspecialchars((string) ($old['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                required
+            >
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input
+                type="email"
+                name="email"
+                class="form-control"
+                value="<?= htmlspecialchars((string) ($old['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+            >
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Teléfono</label>
+            <input
+                type="text"
+                name="telefono"
+                class="form-control"
+                value="<?= htmlspecialchars((string) ($old['telefono'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+            >
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Dirección</label>
+            <textarea name="direccion" class="form-control" rows="3"><?= htmlspecialchars((string) ($old['direccion'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="/proveedores" class="btn btn-secondary">Volver</a>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>
